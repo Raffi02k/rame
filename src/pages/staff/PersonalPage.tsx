@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { useSchedule } from "../context/schedule-context"
-import { Card, CardContent } from "../components/card"
-import { categoryColors } from "../data/demo-data"
+import { useSchedule } from "../../context/schedule-context"
+import { Card, CardContent } from "../../components/card"
+import { categoryColors } from "../../lib/demo-data"
 
 export default function PersonalPage() {
   const { staff, assignments, getTaskById } = useSchedule()

@@ -1,76 +1,13 @@
-export type ServiceType = "LSS" | "SÄBO" | "Hemtjänst"
-export type RoleType = "Staff" | "ServiceUser"
-export type TaskCategory = "Brukarnära" | "HSL" | "Praktisk" | "Administrativ"
-export type AssignmentStatus = "planned" | "inProgress" | "done"
-export type Wing = "Norr" | "Söder"
-export type TeamColor = "Röd" | "Blå" | "Lila" | "Vit"
-export type ShiftType = "day" | "evening" | "night"
+// src/lib/demo-data.ts
+import {
+  Unit,
+  Person,
+  Shift,
+  Task,
+  Assignment,
+  TaskCategory,
+} from "./types"
 
-
-export interface Unit {
-  id: string
-  name: string
-  serviceType: ServiceType
-}
-
-export interface Person {
-  id: string
-  fullName: string
-  initials: string
-  photo: string
-  roleType: RoleType
-  profession?: string
-  unitId?: string
-  roomNumber?: string    // t.ex. "27"
-  floorLabel?: string    // t.ex. "Våning 3"
-   wing?: Wing           // "Norr" eller "Söder"
-}
-
-export interface Shift {
-  id: string
-  unitId: string
-  staffId: string
-  startTime: string
-  endTime: string
-  date: string
-  teamColor?: TeamColor   // "Röd" / "Blå" / "Lila" / "Vit"
-  wing?: Wing             // "Norr" / "Söder"
-}
-
-export interface ShiftReport {
-  id: string
-  unitId: string
-  date: string            // "2025-12-11"
-  shiftType: ShiftType    // "night" → rapport till dagen
-  fromTeamColor?: TeamColor
-  text: string            // själva rapporttexten
-}
-
-export interface Task {
-  id: string
-  unitId: string
-  title: string
-  description: string
-  category: TaskCategory
-  requiresSignature: boolean
-  startTime: string
-  endTime: string
-  serviceUserId?: string
-  isFixedTime: boolean
-  dayOfWeek?: number
-  // 🔹 Nytt – t.ex. lyft, dusch med 2 personal
-  requiresTwoStaff?: boolean
-}
-
-export interface Assignment {
-  taskId: string
-  staffId: string
-  status: AssignmentStatus        // planned / inProgress / done
-  completedAt?: string            // "08:25"
-  signedBy?: string               // behålls för bakåtkomp.
-  signedByStaffId?: string        // t.ex. "s3"
-  signedAt?: string               // t.ex. "2025-12-11T08:10:00"
-}
 
 
 // Demo Units
@@ -597,7 +534,7 @@ export const tasks: Task[] = [
 {
   id: "t28",
   unitId: "u2",
-  title: "Morgonrond David",
+  title: "Morgon stöd David",
   description: "Morgonstöd och kontroll",
   category: "Brukarnära",
   requiresSignature: false,

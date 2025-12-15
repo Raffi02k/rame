@@ -8,7 +8,7 @@ import {
   getTaskById,
   getAssignmentsByStaff,
   categoryColors,
-} from "../data/demo-data"
+} from "../lib/demo-data"
 
 const ScheduleContext = createContext<ScheduleContextValue | undefined>(undefined)
 

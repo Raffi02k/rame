@@ -1,0 +1,11 @@
+# Projektkrav – Autopilot Planner / Rame
+
+## Runtime
+
+- Node.js: **>= 20** (rekommenderat)
+- npm: **>= 10**
+
+Installera paket:
+
+```bash
+npm install
