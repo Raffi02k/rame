@@ -90,12 +90,15 @@
   --sidebar-ring: oklch(0.439 0 0);
 }
 
+
+
+
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    background-color: #f8fafc;
   }
 }
-
