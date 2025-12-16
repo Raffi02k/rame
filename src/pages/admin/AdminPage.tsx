@@ -8,7 +8,8 @@ import {
   getShiftsByUnit,
   getTasksByUnit,
 } from "../../lib/demo-data"
-import { Unit } from "../../lib/types"
+import { getUITranslations } from "../../lib/translation"
+import { LanguageCode, Unit, ViewMode } from "../../lib/types"
 import { AdminHeader } from "./components/AdminHeader"
 import { StaffingTodayCard } from "./components/StaffingTodayCard"
 import { TodayOverviewCard } from "./components/TodayOverviewCard"
@@ -18,9 +19,19 @@ export default function AdminPage() {
   // 1. State
   const [unitId, setUnitId] = useState("u2") // SÄBO Källstorp i demon
 
+  // 🆕 Sprint 3: vy-läge & språk
+  const [viewMode, setViewMode] = useState<ViewMode>("day")
+  const [activeLang, setActiveLang] = useState<LanguageCode>("sv")
+
+  // 🆕 Sprint 3: hämta UI-strängar baserat på språk
+  const t = getUITranslations(activeLang)
+
   // 2. Datum
   const todayDate = new Date()
   const todayIso = todayDate.toISOString().split("T")[0]
+
+  // OBS: datum-strängen är fortfarande sv-SE – det är okej för nu.
+  // Senare kan vi anpassa beroende på activeLang.
   const todayLabel = todayDate.toLocaleDateString("sv-SE", {
     weekday: "long",
     year: "numeric",
@@ -38,10 +49,12 @@ export default function AdminPage() {
   const tasksForUnit = getTasksByUnit(unitId)
 
   // Dagens uppgifter (inte hela veckan)
-  const tasksToday = tasksForUnit.filter(
-    (t) => t.dayOfWeek === weekdayIndex
-  )
+  const tasksToday = tasksForUnit.filter((t) => t.dayOfWeek === weekdayIndex)
   const hslCount = tasksToday.filter((t) => t.category === "HSL").length
+
+  // 🆕 Sprint 3: välj titel beroende på vy-läge
+  const pageTitle =
+    viewMode === "day" ? t.titleDay : t.titleWeek
 
   return (
     <div className="min-h-screen bg-muted px-4 py-8">
@@ -51,8 +64,13 @@ export default function AdminPage() {
           units={units}
           unitId={unitId}
           onUnitChange={setUnitId}
-          title="Schema & bemanning"
+          title={pageTitle}
           subtitle={`${currentUnit?.name ?? ""} · ${todayLabel}`}
+          // 🆕 skickar in vy-läge & språk till headern
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          activeLang={activeLang}
+          onLangChange={setActiveLang}
         />
 
         {/* Översikt idag */}
