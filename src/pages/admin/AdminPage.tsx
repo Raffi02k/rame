@@ -1,7 +1,6 @@
-// src/pages/admin/AdminPage.tsx
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import {
   units,
   getStaffByUnit,
@@ -9,85 +8,199 @@ import {
   getTasksByUnit,
 } from "../../lib/demo-data"
 import { getUITranslations } from "../../lib/translation"
-import { LanguageCode, Unit, ViewMode } from "../../lib/types"
+import { LanguageCode, TaskCategory, Unit, ViewMode } from "../../lib/types"
+
 import { AdminHeader } from "./components/AdminHeader"
+import { MissedTaskAlert } from "./components/MissedTaskAlert"
+import { DaySchedule } from "./components/DaySchedule"
 import { StaffingTodayCard } from "./components/StaffingTodayCard"
-import { TodayOverviewCard } from "./components/TodayOverviewCard"
 import { TasksTodayCard } from "./components/TasksTodayCard"
+import { AdminToolbar } from "./components/AdminToolbar"
+import { ReportModal } from "./modals/ReportModal"
+
 
 export default function AdminPage() {
-  // 1. State
-  const [unitId, setUnitId] = useState("u2") // SÄBO Källstorp i demon
-
-  // 🆕 Sprint 3: vy-läge & språk
+  const [unitId, setUnitId] = useState("u2")
   const [viewMode, setViewMode] = useState<ViewMode>("day")
   const [activeLang, setActiveLang] = useState<LanguageCode>("sv")
 
-  // 🆕 Sprint 3: hämta UI-strängar baserat på språk
-  const t = getUITranslations(activeLang)
+  // UI
+  const [isReportModalOpen, setReportModalOpen] = useState(false)
+  const [activeFilters, setActiveFilters] = useState<TaskCategory[]>([])
+  const [activeStaffFilters, setActiveStaffFilters] = useState<string[]>([])
 
-  // 2. Datum
+  const t = getUITranslations(activeLang)
+  const isRtl = activeLang === "ar"
+
+  // Datum
+  const [currentDate, setCurrentDate] = useState(new Date())
+
+  const navigateDate = (direction: "prev" | "next" | "today") => {
+    if (direction === "today") {
+      setCurrentDate(new Date())
+      return
+    }
+
+  const d = new Date(currentDate)
+  const step = viewMode === "week" ? 7 : 1
+
+  d.setDate(d.getDate() + (direction === "next" ? step : -step))
+  setCurrentDate(d)
+}
+
+
   const todayDate = new Date()
   const todayIso = todayDate.toISOString().split("T")[0]
-
-  // OBS: datum-strängen är fortfarande sv-SE – det är okej för nu.
-  // Senare kan vi anpassa beroende på activeLang.
   const todayLabel = todayDate.toLocaleDateString("sv-SE", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   })
-
-  // Justera så att måndag = 0 (som i demo-data)
   const weekdayIndex = (todayDate.getDay() + 6) % 7
 
-  // 3. Data för vald enhet
+  // Data
   const currentUnit: Unit | undefined = units.find((u) => u.id === unitId)
   const staffOnUnit = getStaffByUnit(unitId)
   const shiftsToday = getShiftsByUnit(unitId, todayIso)
   const tasksForUnit = getTasksByUnit(unitId)
 
-  // Dagens uppgifter (inte hela veckan)
-  const tasksToday = tasksForUnit.filter((t) => t.dayOfWeek === weekdayIndex)
+  const tasksTodayBase = tasksForUnit.filter((t) => t.dayOfWeek === weekdayIndex)
+
+  // Visuella filter (bara för UI-känslan nu)
+  const visibleStaff = useMemo(() => {
+    if (activeStaffFilters.length === 0) return staffOnUnit
+    return staffOnUnit.filter((s) => activeStaffFilters.includes(s.id))
+  }, [staffOnUnit, activeStaffFilters])
+
+  const tasksToday = useMemo(() => {
+    let list = tasksTodayBase
+    if (activeFilters.length > 0) {
+      list = list.filter((t) => activeFilters.includes(t.category))
+    }
+    // vi filtrerar INTE tasks på staff ännu (autopilot/assignments-logik kommer sen)
+    return list
+  }, [tasksTodayBase, activeFilters])
+
   const hslCount = tasksToday.filter((t) => t.category === "HSL").length
 
-  // 🆕 Sprint 3: välj titel beroende på vy-läge
-  const pageTitle =
-    viewMode === "day" ? t.titleDay : t.titleWeek
+  const pageTitle = viewMode === "day" ? t.titleDay : t.titleWeek
+  const toolbarTitle = `${pageTitle} - ${currentUnit?.name ?? ""}`
+
+  const toggleCategory = (cat: TaskCategory) => {
+    setActiveFilters((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]))
+  }
+
+  const toggleStaff = (staffId: string) => {
+    setActiveStaffFilters((prev) => (prev.includes(staffId) ? prev.filter((id) => id !== staffId) : [...prev, staffId]))
+  }
+
+  const clearAllFilters = () => {
+    setActiveFilters([])
+    setActiveStaffFilters([])
+  }
+
+  // “Ny uppgift” – UI nu, funktion sen
+  const handleNewTask = () => {
+    // Sprint senare: öppna TaskModal + skapa/edit
+    // Nu: vi lämnar bara grunden för klick
+    console.log("New task (UI only)")
+  }
+
+  const renderMissedDescription = () => {
+    if (activeLang === "ar")
+      return (
+        <span>
+          لم يتم تسجيل مهام مهمة لـ <span className="font-semibold">Maria C</span> و{" "}
+          <span className="font-semibold">Johan B</span>.
+        </span>
+      )
+    if (activeLang === "en")
+      return (
+        <span>
+          Important tasks for <span className="font-semibold">Maria C</span> and{" "}
+          <span className="font-semibold">Johan B</span> were not registered.
+        </span>
+      )
+    if (activeLang === "es")
+      return (
+        <span>
+          No se registraron tareas importantes para <span className="font-semibold">Maria C</span> y{" "}
+          <span className="font-semibold">Johan B</span>.
+        </span>
+      )
+    return (
+      <span>
+        Viktiga insatser för <span className="font-semibold">Maria C</span> och{" "}
+        <span className="font-semibold">Johan B</span> registrerades ej.
+      </span>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-muted px-4 py-8">
-      <div className="mx-auto flex max-w-6xl flex-col space-y-6">
-        {/* HEADER */}
+    <div
+      className="min-h-screen bg-gray-50 flex flex-col font-sans text-slate-900"
+      dir={isRtl ? "rtl" : "ltr"}
+    >
+      {/* Top header (din befintliga) */}
+      <div className="max-w-[1800px] mx-auto w-full px-4 sm:px-6 py-6">
         <AdminHeader
-          units={units}
-          unitId={unitId}
-          onUnitChange={setUnitId}
-          title={pageTitle}
-          subtitle={`${currentUnit?.name ?? ""} · ${todayLabel}`}
-          // 🆕 skickar in vy-läge & språk till headern
+        units={units}
+        unitId={unitId}
+        onUnitChange={setUnitId}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        activeLang={activeLang}
+        onLangChange={setActiveLang}
+        currentDate={currentDate}
+        onNavigate={navigateDate}
+      />
+
+
+
+        {/* Toolbar (prototyp-känsla) */}
+        <AdminToolbar
+          title={toolbarTitle}
           viewMode={viewMode}
-          onViewModeChange={setViewMode}
           activeLang={activeLang}
-          onLangChange={setActiveLang}
+          filterLabel={t.filterLabel}
+          clearFiltersLabel={t.clearFilters}
+          newTaskLabel={t.newTask}
+          staff={staffOnUnit}
+          activeFilters={activeFilters}
+          activeStaffFilters={activeStaffFilters}
+          onToggleCategory={toggleCategory}
+          onToggleStaff={toggleStaff}
+          onClearAll={clearAllFilters}
+          onNewTask={handleNewTask}
         />
 
-        {/* Översikt idag */}
-        <TodayOverviewCard
-          todayLabel={todayLabel}
-          currentUnitName={currentUnit?.name ?? ""}
-          shiftsCount={shiftsToday.length}
-          tasksCount={tasksToday.length}
-          hslCount={hslCount}
+        {/* Alert (prototyp) */}
+        <MissedTaskAlert
+          title={t.missedTitle}
+          description={renderMissedDescription()}
+          buttonText={t.missedButton}
+          onShowReport={() => setReportModalOpen(true)}
         />
 
-        {/* Bemanning idag */}
-        <StaffingTodayCard staff={staffOnUnit} shifts={shiftsToday} />
+        {/* CONTENT – vi behåller dina cards nu (funktioner/schedule kommer sen) */}
+        <div className="mt-6 space-y-6">
+          <DaySchedule
+            todayLabel={todayLabel}
+            currentUnitName={currentUnit?.name ?? ""}
+            shiftsCount={shiftsToday.length}
+            tasksCount={tasksToday.length}
+            hslCount={hslCount}
+          />
 
-        {/* Dagens uppgifter */}
-        <TasksTodayCard tasks={tasksToday} />
+          {/* Bemanning (vi skickar visibleStaff för att matcha filter-UI) */}
+          <StaffingTodayCard staff={visibleStaff} shifts={shiftsToday} />
+
+          <TasksTodayCard tasks={tasksToday} />
+        </div>
       </div>
+
+      <ReportModal isOpen={isReportModalOpen} onClose={() => setReportModalOpen(false)} />
     </div>
   )
 }

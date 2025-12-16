@@ -18,10 +18,12 @@ export function StaffingTodayCard({ staff, shifts }: StaffingTodayCardProps) {
   return (
     <Card>
       <CardContent className="space-y-4">
-        {/* Titelrad */}
+        {/* ✅ PROTOTYP: rubrik + grå meta-text */}
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Bemanning idag</h2>
-          <p className="text-xs text-muted-foreground">
+          <h2 className="text-lg font-semibold text-gray-900">Bemanning idag</h2>
+
+          {/* ✅ Byter text-muted-foreground -> text-gray-500 */}
+          <p className="text-xs text-gray-500">
             {staff.length} personer · {shifts.length} pass
           </p>
         </div>
@@ -35,24 +37,32 @@ export function StaffingTodayCard({ staff, shifts }: StaffingTodayCardProps) {
             return (
               <div
                 key={person.id}
-                className="flex items-start justify-between gap-3 rounded-lg border bg-card/60 p-3"
+                // ✅ PROTOTYP: vit bakgrund, grå border, subtil hover
+                className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:bg-gray-50 transition-colors"
               >
                 {/* VÄNSTER: namn, roll, tid */}
                 <div>
-                  <p className="font-medium leading-tight">{person.fullName}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-medium leading-tight text-gray-900">
+                    {person.fullName}
+                  </p>
+
+                  {/* ✅ Byter text-muted-foreground -> text-gray-500 */}
+                  <p className="text-xs text-gray-500">
                     {person.profession ?? "Personal"}
                   </p>
 
                   {mainShift ? (
-                    <p className="mt-1 text-xs">
-                      Pass:{" "}
+                    <p className="mt-1 text-xs text-gray-900">
+                      {/* ✅ Label lite “prototypig”: grå, bold, uppercase är optional
+                          Här håller vi det enkelt men med tydlig gråskala */}
+                      <span className="text-gray-500">Pass: </span>
                       <span className="font-semibold">
                         {mainShift.startTime}–{mainShift.endTime}
                       </span>
                     </p>
                   ) : (
-                    <p className="mt-1 text-xs italic text-muted-foreground">
+                    // ✅ Byter text-muted-foreground -> text-gray-500 (och håller italic)
+                    <p className="mt-1 text-xs italic text-gray-500">
                       Ingen tur idag (i demo-datan)
                     </p>
                   )}
@@ -63,17 +73,20 @@ export function StaffingTodayCard({ staff, shifts }: StaffingTodayCardProps) {
                   <div className="text-right text-xs space-y-1">
                     {mainShift.teamColor && (
                       <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 font-medium ${
-                          TEAM_COLOR_STYLES[mainShift.teamColor] ?? ""
-                        }`}
+                        className={
+                          // ✅ Team-pill behåller färg men är fortfarande “prototyp” via rounded + border
+                          `inline-flex rounded-full border px-2 py-0.5 font-medium ${
+                            TEAM_COLOR_STYLES[mainShift.teamColor] ?? ""
+                          }`
+                        }
                       >
                         {mainShift.teamColor} lag
                       </span>
                     )}
+
                     {mainShift.wing && (
-                      <p className="text-muted-foreground">
-                        {mainShift.wing}-sida
-                      </p>
+                      // ✅ Byter text-muted-foreground -> text-gray-500
+                      <p className="text-gray-500">{mainShift.wing}-sida</p>
                     )}
                   </div>
                 )}

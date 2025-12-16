@@ -1,9 +1,6 @@
 // src/pages/admin/components/TasksTodayCard.tsx
 import { Card, CardContent } from "../../../components/card"
-import {
-  Task,
-  TaskCategory,
-} from "../../../lib/types"
+import { Task, TaskCategory } from "../../../lib/types"
 import {
   categoryColors,
   assignments,
@@ -15,12 +12,7 @@ interface TasksTodayCardProps {
   tasks: Task[]
 }
 
-const CATEGORY_ORDER: TaskCategory[] = [
-  "HSL",
-  "Brukarnära",
-  "Praktisk",
-  "Administrativ",
-]
+const CATEGORY_ORDER: TaskCategory[] = ["HSL", "Brukarnära", "Praktisk", "Administrativ"]
 
 const CATEGORY_LABELS: Record<TaskCategory, string> = {
   HSL: "HSL / medicinskt",
@@ -52,18 +44,17 @@ function formatStatus(taskId: string): string {
 }
 
 export function TasksTodayCard({ tasks }: TasksTodayCardProps) {
-  // Tomt läge
   if (tasks.length === 0) {
     return (
       <Card>
-        <CardContent className="py-6 text-sm text-muted-foreground">
+        {/* ✅ Prototyp-grå text */}
+        <CardContent className="py-6 text-sm text-gray-500">
           Inga demo-uppgifter inlagda för idag.
         </CardContent>
       </Card>
     )
   }
 
-  // Grupp per kategori
   const tasksByCategory: Record<TaskCategory, Task[]> = {
     Brukarnära: tasks.filter((t) => t.category === "Brukarnära"),
     HSL: tasks.filter((t) => t.category === "HSL"),
@@ -74,9 +65,10 @@ export function TasksTodayCard({ tasks }: TasksTodayCardProps) {
   return (
     <Card>
       <CardContent className="space-y-4">
+        {/* ✅ Titelrad mer prototyp */}
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Dagens uppgifter</h2>
-          <p className="text-xs text-muted-foreground">
+          <h2 className="text-lg font-semibold text-gray-900">Dagens uppgifter</h2>
+          <p className="text-xs font-medium text-gray-500">
             {tasks.length} uppgifter i demon
           </p>
         </div>
@@ -90,40 +82,42 @@ export function TasksTodayCard({ tasks }: TasksTodayCardProps) {
 
             return (
               <div key={cat} className="space-y-2">
-                {/* Kategorirubrik */}
+                {/* ✅ Kategorichip (behåller dina färger) */}
                 <div
                   className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${colors.bg} ${colors.text} ${colors.border}`}
                 >
                   {CATEGORY_LABELS[cat]}
-                  <span className="text-[10px] opacity-80">
-                    {list.length} st
-                  </span>
+                  <span className="text-[10px] opacity-80">{list.length} st</span>
                 </div>
 
-                {/* Lista med tasks */}
+                {/* ✅ Lista med tasks */}
                 <div className="space-y-2">
                   {list.map((task) => {
-                    const su = task.serviceUserId
-                      ? getServiceUserById(task.serviceUserId)
-                      : undefined
+                    const su = task.serviceUserId ? getServiceUserById(task.serviceUserId) : undefined
                     const statusLabel = formatStatus(task.id)
 
                     return (
                       <div
                         key={task.id}
-                        className="rounded-md border bg-card/60 px-3 py-2 text-sm"
+                        className={[
+                          // ✅ Mer prototyp: vit yta + subtil hover
+                          "rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm",
+                          "hover:bg-gray-50/50 transition-colors",
+                        ].join(" ")}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-xs text-muted-foreground">
+                            {/* ✅ Prototyp-grå för tid */}
+                            <p className="text-xs font-medium text-gray-500">
                               {task.startTime}–{task.endTime}
                             </p>
-                            <p className="font-medium leading-snug">
+
+                            <p className="font-semibold text-gray-900 leading-snug">
                               {task.title}
                             </p>
 
                             {su && (
-                              <p className="text-xs text-muted-foreground mt-0.5">
+                              <p className="text-xs text-gray-500 mt-0.5">
                                 {su.fullName}
                                 {su.roomNumber && <> · Rum {su.roomNumber}</>}
                                 {su.floorLabel && <> · {su.floorLabel}</>}
@@ -132,9 +126,9 @@ export function TasksTodayCard({ tasks }: TasksTodayCardProps) {
                             )}
                           </div>
 
-                          {/* Chipar till höger */}
+                          {/* ✅ Chips till höger (neutralare grå) */}
                           <div className="flex flex-col items-end gap-1 text-[11px]">
-                            <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+                            <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600 border border-gray-200">
                               {statusLabel}
                             </span>
 

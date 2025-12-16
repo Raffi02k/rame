@@ -7,17 +7,14 @@ export function Card({ className, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-xl bg-card text-card-foreground border border-border shadow-sm",
+        "bg-white border border-gray-200 rounded-xl shadow-sm",
         className
       )}
       {...props}
     />
-  );
+  )
 }
 
-export function CardContent({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("p-6", className)} {...props} />;
+export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("p-4 sm:p-5", className)} {...props} />
 }

@@ -173,7 +173,7 @@ export const shifts: Shift[] = [
 export const tasks: Task[] = [
   // Brukarnära tasks - u1 (LSS)
   {
-    id: "t1",
+    id: "t",
     unitId: "u1",
     title: "Morgonstöd Anna",
     description: "Hjälpa Anna med morgonrutiner, påklädning och frukost",
