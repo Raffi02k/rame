@@ -1,153 +1,160 @@
-"use client"
+import React, { useState, useMemo } from 'react';
+import { Filter, Plus, X, Users } from 'lucide-react';
+// import { Button } from '../../components/Button'; // Assuming Button exists or I should comment it out/replace
+// Helper: I'll try to use a local button or assume it's there. The user didn't give Button code. 
+// I'll check components folder. Step 6 showed components/button.tsx. So '../../components/button' is likely correct (case sensitive?).
+// In Step 6: components/button.tsx.
+import { Button } from '../../components/button';
+import { STAFF, UNITS, USERS } from '../../lib/demo-data';
+import { cn, getCategoryColor } from '../../lib/utils';
+import { getUITranslations, translateTasks, getCategoryLabel as getCatLabel } from '../../lib/translations';
+import { Task, TaskStatus, TaskCategory } from '../../lib/types'; // Corrected path
+import { useTasks } from '../../context/TaskContext';
 
-import { useMemo, useState } from "react"
-import {
-  units,
-  getStaffByUnit,
-  getShiftsByUnit,
-  getTasksByUnit,
-} from "../../lib/demo-data"
-import { getUITranslations } from "../../lib/translation"
-import { LanguageCode, TaskCategory, Unit, ViewMode } from "../../lib/types"
-
-import { AdminHeader } from "./components/AdminHeader"
-import { MissedTaskAlert } from "./components/MissedTaskAlert"
-import { DaySchedule } from "./components/DaySchedule"
-import { StaffingTodayCard } from "./components/StaffingTodayCard"
-import { TasksTodayCard } from "./components/TasksTodayCard"
-import { AdminToolbar } from "./components/AdminToolbar"
-import { ReportModal } from "./modals/ReportModal"
-
+// Sub-components
+import { AdminHeader } from './components/AdminHeader';
+import { MissedTaskAlert } from './components/MissedTaskAlert';
+import { DaySchedule } from './components/DaySchedule';
+import { WeekSchedule } from './components/WeekSchedule';
+import { TaskModal } from './modals/TaskModal';
+import { ReportModal } from './modals/ReportModal';
 
 export default function AdminPage() {
-  const [unitId, setUnitId] = useState("u2")
-  const [viewMode, setViewMode] = useState<ViewMode>("day")
-  const [activeLang, setActiveLang] = useState<LanguageCode>("sv")
+  // State
+  const [currentUnitId, setCurrentUnitId] = useState(UNITS[0].id);
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('week');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  // UI
-  const [isReportModalOpen, setReportModalOpen] = useState(false)
-  const [activeFilters, setActiveFilters] = useState<TaskCategory[]>([])
-  const [activeStaffFilters, setActiveStaffFilters] = useState<string[]>([])
+  const [isTaskModalOpen, setTaskModalOpen] = useState(false);
+  const [isReportModalOpen, setReportModalOpen] = useState(false);
 
-  const t = getUITranslations(activeLang)
-  const isRtl = activeLang === "ar"
+  // Use Global Context instead of local state
+  const { tasks: globalTasks, updateTask: globalUpdateTask, addTask: globalAddTask, deleteTask: globalDeleteTask } = useTasks();
 
-  // Datum
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentTask, setCurrentTask] = useState<Partial<Task> | null>(null);
+  const [activeLang, setActiveLang] = useState<import('../../lib/types').LanguageCode>('sv');
 
-  const navigateDate = (direction: "prev" | "next" | "today") => {
-    if (direction === "today") {
-      setCurrentDate(new Date())
-      return
-    }
+  // Filters
+  const [activeFilters, setActiveFilters] = useState<TaskCategory[]>([]);
+  const [activeStaffFilters, setActiveStaffFilters] = useState<string[]>([]);
 
-  const d = new Date(currentDate)
-  const step = viewMode === "week" ? 7 : 1
+  // Translations
+  const t = getUITranslations(activeLang);
 
-  d.setDate(d.getDate() + (direction === "next" ? step : -step))
-  setCurrentDate(d)
-}
+  // Derived Data
+  const allUnitStaff = useMemo(() => STAFF.filter(s => s.unitId === currentUnitId), [currentUnitId]);
 
-
-  const todayDate = new Date()
-  const todayIso = todayDate.toISOString().split("T")[0]
-  const todayLabel = todayDate.toLocaleDateString("sv-SE", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  })
-  const weekdayIndex = (todayDate.getDay() + 6) % 7
-
-  // Data
-  const currentUnit: Unit | undefined = units.find((u) => u.id === unitId)
-  const staffOnUnit = getStaffByUnit(unitId)
-  const shiftsToday = getShiftsByUnit(unitId, todayIso)
-  const tasksForUnit = getTasksByUnit(unitId)
-
-  const tasksTodayBase = tasksForUnit.filter((t) => t.dayOfWeek === weekdayIndex)
-
-  // Visuella filter (bara för UI-känslan nu)
+  // Här filtrerar vi VILKA RADER som ska visas i schemat
   const visibleStaff = useMemo(() => {
-    if (activeStaffFilters.length === 0) return staffOnUnit
-    return staffOnUnit.filter((s) => activeStaffFilters.includes(s.id))
-  }, [staffOnUnit, activeStaffFilters])
+    if (activeStaffFilters.length === 0) return allUnitStaff;
+    return allUnitStaff.filter(s => activeStaffFilters.includes(s.id));
+  }, [allUnitStaff, activeStaffFilters]);
 
-  const tasksToday = useMemo(() => {
-    let list = tasksTodayBase
+  const filteredTasks = useMemo(() => {
+    // 1. Filter by Unit
+    let tasks = globalTasks.filter(t => t.unitId === currentUnitId || !t.unitId);
+
+    // 2. Filter by Category
     if (activeFilters.length > 0) {
-      list = list.filter((t) => activeFilters.includes(t.category))
+      tasks = tasks.filter(t => activeFilters.includes(t.category));
     }
-    // vi filtrerar INTE tasks på staff ännu (autopilot/assignments-logik kommer sen)
-    return list
-  }, [tasksTodayBase, activeFilters])
 
-  const hslCount = tasksToday.filter((t) => t.category === "HSL").length
+    // VIKTIGT: Vi filtrerar INTE bort tasks baserat på assigneeId/staff här längre.
+    // Eftersom vi vill visa Autopilot-tasks (som saknar assigneeId) på de rader som är synliga,
+    // måste vi skicka med alla tasks till komponenterna.
+    // Komponenterna (DaySchedule/WeekSchedule) ansvarar för att matcha task -> person.
+    // Eftersom vi filtrerar 'visibleStaff' ovan, kommer vi ändå bara se tasks för de valda personerna.
 
-  const pageTitle = viewMode === "day" ? t.titleDay : t.titleWeek
-  const toolbarTitle = `${pageTitle} - ${currentUnit?.name ?? ""}`
+    // 4. Translate using Utility function
+    return translateTasks(tasks, activeLang);
 
-  const toggleCategory = (cat: TaskCategory) => {
-    setActiveFilters((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]))
-  }
+  }, [currentUnitId, activeFilters, globalTasks, activeLang]);
 
-  const toggleStaff = (staffId: string) => {
-    setActiveStaffFilters((prev) => (prev.includes(staffId) ? prev.filter((id) => id !== staffId) : [...prev, staffId]))
-  }
+  // Handlers
+  const handleEditTask = (task: Task) => {
+    setCurrentTask(task);
+    setTaskModalOpen(true);
+  };
+
+  const handleNewTask = () => {
+    setCurrentTask({
+      unitId: currentUnitId,
+      assigneeId: visibleStaff[0]?.id,
+      timeStart: '08:00',
+      timeEnd: '09:00',
+      status: TaskStatus.PENDING,
+      category: TaskCategory.CARE
+    });
+    setTaskModalOpen(true);
+  };
+
+  const saveTask = (taskData: Partial<Task>) => {
+    if (taskData.id) {
+      // Update via Context
+      globalUpdateTask(taskData.id, taskData);
+    } else {
+      // Create via Context
+      const newTask = {
+        ...taskData,
+        id: Math.random().toString(36).substr(2, 9),
+        unitId: currentUnitId
+      } as Task;
+      globalAddTask(newTask);
+    }
+    setTaskModalOpen(false);
+  };
+
+  const handleDeleteTask = (id: string) => {
+    globalDeleteTask(id);
+    setTaskModalOpen(false);
+  };
+
+  const toggleFilter = (cat: TaskCategory) => {
+    setActiveFilters(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+  };
+
+  const toggleStaffFilter = (staffId: string) => {
+    setActiveStaffFilters(prev =>
+      prev.includes(staffId) ? prev.filter(id => id !== staffId) : [...prev, staffId]
+    );
+  };
 
   const clearAllFilters = () => {
-    setActiveFilters([])
-    setActiveStaffFilters([])
-  }
+    setActiveFilters([]);
+    setActiveStaffFilters([]);
+  };
 
-  // “Ny uppgift” – UI nu, funktion sen
-  const handleNewTask = () => {
-    // Sprint senare: öppna TaskModal + skapa/edit
-    // Nu: vi lämnar bara grunden för klick
-    console.log("New task (UI only)")
-  }
+  const navigateDate = (direction: 'prev' | 'next' | 'today') => {
+    const newDate = new Date(currentDate);
+
+    if (direction === 'today') {
+      setCurrentDate(new Date());
+      return;
+    }
+    const daysToAdd = viewMode === 'week' ? 7 : 1;
+    const modifier = direction === 'next' ? 1 : -1;
+    newDate.setDate(newDate.getDate() + (daysToAdd * modifier));
+    setCurrentDate(newDate);
+  };
 
   const renderMissedDescription = () => {
-    if (activeLang === "ar")
-      return (
-        <span>
-          لم يتم تسجيل مهام مهمة لـ <span className="font-semibold">Maria C</span> و{" "}
-          <span className="font-semibold">Johan B</span>.
-        </span>
-      )
-    if (activeLang === "en")
-      return (
-        <span>
-          Important tasks for <span className="font-semibold">Maria C</span> and{" "}
-          <span className="font-semibold">Johan B</span> were not registered.
-        </span>
-      )
-    if (activeLang === "es")
-      return (
-        <span>
-          No se registraron tareas importantes para <span className="font-semibold">Maria C</span> y{" "}
-          <span className="font-semibold">Johan B</span>.
-        </span>
-      )
-    return (
-      <span>
-        Viktiga insatser för <span className="font-semibold">Maria C</span> och{" "}
-        <span className="font-semibold">Johan B</span> registrerades ej.
-      </span>
-    )
-  }
+    if (activeLang === 'ar') return <span>لم يتم تسجيل مهام مهمة لـ <span className="font-semibold">Maria C</span> و <span className="font-semibold">Johan B</span>.</span>;
+    if (activeLang === 'en') return <span>Important tasks for <span className="font-semibold">Maria C</span> and <span className="font-semibold">Johan B</span> were not registered.</span>;
+    if (activeLang === 'es') return <span>No se registraron tareas importantes para <span className="font-semibold">Maria C</span> y <span className="font-semibold">Johan B</span>.</span>;
+    return <span>Viktiga insatser för <span className="font-semibold">Maria C</span> och <span className="font-semibold">Johan B</span> registrerades ej.</span>;
+  };
+
+  const hasActiveFilters = activeFilters.length > 0 || activeStaffFilters.length > 0;
 
   return (
-    <div
-      className="min-h-screen bg-gray-50 flex flex-col font-sans text-slate-900"
-      dir={isRtl ? "rtl" : "ltr"}
-    >
-      {/* Top header (din befintliga) */}
-      <div className="max-w-[1800px] mx-auto w-full px-4 sm:px-6 py-6">
-        <AdminHeader
-        units={units}
-        unitId={unitId}
-        onUnitChange={setUnitId}
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-slate-900" dir={activeLang === 'ar' ? 'rtl' : 'ltr'}>
+
+      <AdminHeader
+        units={UNITS}
+        unitId={currentUnitId}
+        onUnitChange={setCurrentUnitId}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         activeLang={activeLang}
@@ -156,26 +163,92 @@ export default function AdminPage() {
         onNavigate={navigateDate}
       />
 
+      <main className="flex-1 min-w-0 overflow-x-visible flex flex-col max-w-[1800px] mx-auto w-full px-4 sm:px-6 py-6">
 
+        {/* Toolbar */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+              {viewMode === 'day'
+                ? `${t.titleDay} - ${currentUnitId === 'u1' ? 'Kronan' : 'Källstorpsgården'}`
+                : `${t.titleWeek} - ${currentUnitId === 'u1' ? 'Kronan' : 'Källstorpsgården'}`
+              }
+            </h1>
+            {viewMode === 'day' && (
+              <div className="text-gray-500 text-sm flex gap-4 mt-1">
+                <span>{activeLang === 'ar' ? 'الليل' : 'Natt'} 23:00 - 05:59</span>
+                <span className="w-px h-4 bg-gray-300"></span>
+                <span>{activeLang === 'ar' ? 'الصباح' : 'Morgon'} 06:00 - 11:59</span>
+              </div>
+            )}
+          </div>
 
-        {/* Toolbar (prototyp-känsla) */}
-        <AdminToolbar
-          title={toolbarTitle}
-          viewMode={viewMode}
-          activeLang={activeLang}
-          filterLabel={t.filterLabel}
-          clearFiltersLabel={t.clearFilters}
-          newTaskLabel={t.newTask}
-          staff={staffOnUnit}
-          activeFilters={activeFilters}
-          activeStaffFilters={activeStaffFilters}
-          onToggleCategory={toggleCategory}
-          onToggleStaff={toggleStaff}
-          onClearAll={clearAllFilters}
-          onNewTask={handleNewTask}
-        />
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Filter Bar */}
+            <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg p-1.5 shadow-sm overflow-x-auto max-w-full">
+              <span className="px-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center">
+                <Filter size={10} className={activeLang === 'ar' ? "ml-1" : "mr-1"} /> {t.filterLabel}
+              </span>
+              {Object.values(TaskCategory).map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => toggleFilter(cat)}
+                  className={cn(
+                    "px-3 py-1 text-xs rounded-md font-bold transition-all capitalize whitespace-nowrap border",
+                    activeFilters.includes(cat)
+                      ? getCategoryColor(cat) + " shadow-sm border-transparent transform scale-105"
+                      : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:text-gray-700"
+                  )}
+                >
+                  {getCatLabel(cat, activeLang)}
+                </button>
+              ))}
+              <div className="w-px h-5 bg-gray-200 mx-1"></div>
+              <span className="px-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center">
+                <Users size={12} className={activeLang === 'ar' ? "ml-1" : "mr-1"} />
+              </span>
+              <div className="flex -space-x-1.5 hover:space-x-1 transition-all">
+                {allUnitStaff.map(person => {
+                  const isActive = activeStaffFilters.includes(person.id);
+                  const isDimmed = activeStaffFilters.length > 0 && !isActive;
+                  return (
+                    <button
+                      key={person.id}
+                      onClick={() => toggleStaffFilter(person.id)}
+                      className={cn(
+                        "relative rounded-full transition-all duration-200 focus:outline-none",
+                        isActive ? "z-10 ring-2 ring-offset-1 ring-municipal-500 scale-110" : "hover:scale-110 hover:z-10",
+                        isDimmed && "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"
+                      )}
+                      title={person.name}
+                    >
+                      <img
+                        src={person.avatar}
+                        alt={person.name}
+                        className="w-7 h-7 rounded-full border border-white shadow-sm"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+              {hasActiveFilters && (
+                <>
+                  <div className="h-4 w-px bg-gray-200 mx-1"></div>
+                  <button
+                    onClick={clearAllFilters}
+                    className="px-2 py-1 text-xs text-gray-500 font-medium hover:text-red-600 hover:bg-red-50 rounded flex items-center gap-1 transition-colors"
+                  >
+                    <X size={12} /> {t.clearFilters}
+                  </button>
+                </>
+              )}
+            </div>
+            <Button onClick={handleNewTask} className="shadow-lg shadow-municipal-500/20 gap-2 text-sm">
+              <Plus size={16} /> {t.newTask}
+            </Button>
+          </div>
+        </div>
 
-        {/* Alert (prototyp) */}
         <MissedTaskAlert
           title={t.missedTitle}
           description={renderMissedDescription()}
@@ -183,24 +256,39 @@ export default function AdminPage() {
           onShowReport={() => setReportModalOpen(true)}
         />
 
-        {/* CONTENT – vi behåller dina cards nu (funktioner/schedule kommer sen) */}
-        <div className="mt-6 space-y-6">
-          <DaySchedule
-            todayLabel={todayLabel}
-            currentUnitName={currentUnit?.name ?? ""}
-            shiftsCount={shiftsToday.length}
-            tasksCount={tasksToday.length}
-            hslCount={hslCount}
+        {viewMode === 'week' ? (
+          <WeekSchedule
+            currentDate={currentDate}
+            staff={visibleStaff}
+            tasks={filteredTasks}
+            onTaskClick={handleEditTask}
+            activeLang={activeLang}
+            onDayClick={(date) => {
+              setCurrentDate(date);
+              setViewMode('day');
+            }}
           />
+        ) : (
+          <DaySchedule
+            currentDate={currentDate}
+            staff={visibleStaff}
+            tasks={filteredTasks}
+            onTaskClick={handleEditTask}
+            activeLang={activeLang}
+          />
+        )}
+      </main>
 
-          {/* Bemanning (vi skickar visibleStaff för att matcha filter-UI) */}
-          <StaffingTodayCard staff={visibleStaff} shifts={shiftsToday} />
-
-          <TasksTodayCard tasks={tasksToday} />
-        </div>
-      </div>
-
+      <TaskModal
+        isOpen={isTaskModalOpen}
+        onClose={() => setTaskModalOpen(false)}
+        task={currentTask}
+        staffList={visibleStaff.length > 0 ? visibleStaff : allUnitStaff}
+        users={USERS}
+        onSave={saveTask}
+        onDelete={handleDeleteTask}
+      />
       <ReportModal isOpen={isReportModalOpen} onClose={() => setReportModalOpen(false)} />
     </div>
-  )
+  );
 }
