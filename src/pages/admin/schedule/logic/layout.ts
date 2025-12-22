@@ -1,3 +1,8 @@
+// --- WeekLayout ---
+export const WEEK_GRID_TEMPLATE_COLUMNS = "220px repeat(7, minmax(110px, 1fr))";
+
+
+// --- DayScheduleLayout ---
 export type DayScheduleLayout = {
     viewStartHour: number;
     viewEndHour: number;
