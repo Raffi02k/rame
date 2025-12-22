@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
 import { Person, Task } from "../../../../types";
-import { getShiftForDate } from "../../../../lib/utils";
 import { toLocalYMD } from "../logic/date";
+import { getWeekTasksForPersonAndDay, isOffForPersonOnDate } from "../logic/selectors";
+import { useTasks } from "../../../../context/TaskContext";
 
 interface WeekTasksCellProps {
     person: Person;
@@ -19,33 +20,28 @@ export const WeekTasksCell: React.FC<WeekTasksCellProps> = ({
     onTaskClick,
 }) => {
     const dateKey = toLocalYMD(date);
+    const { getTaskStatus } = useTasks();
 
-    // Shift för dagen (så vi kan matcha shiftRole)
-    const shift = getShiftForDate(person.id, date, activeLang);
+    // Off ska avgöras av shift, inte av "0 tasks"
+    const isOff = useMemo(
+        () => isOffForPersonOnDate(person.id, date, activeLang),
+        [person.id, date, activeLang]
+    );
 
     const { visible, hiddenCount } = useMemo(() => {
-        // Om personen är ledig: visa tom cell (samma “tänk” som prototyp)
-        if (shift.type === "off") return { visible: [] as Task[], hiddenCount: 0 };
-
-        const matchesDate = (t: Task) => !t.date || t.date === dateKey;
-
-        const matchesPerson = (t: Task) => {
-            // 1) shiftRole matchar dagens shift
-            if (t.shiftRole && t.shiftRole === shift.id) return true;
-
-            // 2) annars: assigneeId matchar person och task har INTE shiftRole
-            if (t.assigneeId && t.assigneeId === person.id && !t.shiftRole) return true;
-
-            return false;
-        };
+        if (isOff) return { visible: [] as Task[], hiddenCount: 0 };
 
         const toMinutes = (hhmm: string) => {
             const [h, m] = hhmm.split(":").map(Number);
             return h * 60 + m;
         };
 
-        const all = tasks
-            .filter((t) => matchesDate(t) && matchesPerson(t))
+        const all = getWeekTasksForPersonAndDay(tasks, person, date, dateKey, activeLang)
+            .map((t) => ({
+                ...t,
+                status: getTaskStatus(t.id, dateKey),
+                date: dateKey,
+            }))
             .sort((a, b) => toMinutes(a.timeStart) - toMinutes(b.timeStart));
 
         const MAX = 3;
@@ -53,10 +49,9 @@ export const WeekTasksCell: React.FC<WeekTasksCellProps> = ({
         const hiddenCount = Math.max(all.length - MAX, 0);
 
         return { visible, hiddenCount };
-    }, [tasks, dateKey, person.id, shift.id, shift.type]);
+    }, [isOff, tasks, person, date, dateKey, activeLang, getTaskStatus]);
 
-    // Ledig → dimmad tom ruta (du kan justera klassen om du vill matcha exakt)
-    if (shift.type === "off") {
+    if (isOff) {
         return <div className="h-full p-3 bg-gray-50/60 opacity-70 grayscale" />;
     }
 
@@ -71,9 +66,7 @@ export const WeekTasksCell: React.FC<WeekTasksCellProps> = ({
                     <div className="text-[11px] font-mono font-bold text-gray-500">
                         {task.timeStart}–{task.timeEnd}
                     </div>
-                    <div className="text-xs font-bold text-gray-900 truncate">
-                        {task.title}
-                    </div>
+                    <div className="text-xs font-bold text-gray-900 truncate">{task.title}</div>
                 </button>
             ))}
 
