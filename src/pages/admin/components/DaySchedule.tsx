@@ -1,6 +1,10 @@
 import React from "react";
 import { Task, Person } from "../../../types";
-import { getShiftForDate } from "../../../lib/utils";
+
+import { ScheduleHeader } from "../schedule/components/ScheduleHeader";
+import { ScheduleGridBackground } from "../schedule/components/ScheduleGridBackground";
+import { StaffRow } from "../schedule/components/StaffRow";
+import { UnassignedRow } from "../schedule/components/UnassignedRow";
 
 interface DayScheduleProps {
   currentDate: Date;
@@ -98,140 +102,47 @@ export const DaySchedule: React.FC<DayScheduleProps> = ({
       <div className="overflow-auto flex-1 relative">
         <div style={{ width: `${STAFF_COLUMN_WIDTH_PX + timelineWidthPx}px` }} className="flex flex-col">
           {/* ===== HEADER: Staff + timmar ===== */}
-          <div
-            className="sticky top-0 z-30 bg-gray-50 border-b border-gray-200 h-12 grid"
-            style={{ gridTemplateColumns }}
-          >
-            <div className="sticky left-0 z-40 bg-gray-50 px-3 flex items-center text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-200 shadow-[4px_0_10px_rgba(0,0,0,0.05)]">
-              Personal ({visibleStaff.length})
-            </div>
-
-            {hourHeaders.map((hour) => (
-              <div
-                key={hour}
-                className="flex items-center justify-center text-[11px] font-bold text-gray-400 border-l border-gray-200 bg-gray-50"
-              >
-                {String(hour).padStart(2, "0")}:00
-              </div>
-            ))}
-          </div>
+          <ScheduleHeader
+            gridTemplateColumns={gridTemplateColumns}
+            hourHeaders={hourHeaders}
+            staffCount={visibleStaff.length}
+          />
 
           <div className="relative bg-white">
             {/* ===== Bakgrunds-grid: vertikala linjer per timme ===== */}
-            <div className="absolute inset-0 pointer-events-none z-0 grid" style={{ gridTemplateColumns }}>
-              <div className="border-r border-gray-200" />
-              {hourHeaders.map((hour) => (
-                <div key={hour} className="border-l border-gray-100 h-full" />
-              ))}
-            </div>
+            <ScheduleGridBackground
+              gridTemplateColumns={gridTemplateColumns}
+              hourHeaders={hourHeaders}
+            />
 
             {/* ===== Rader per person ===== */}
-            {visibleStaff.map((person) => {
-              const shift = getShiftForDate(person.id, currentDate, activeLang);
-
-              // 1) shiftRole matchar dagens shift
-              // 2) assigneeId matchar personen (och tasken har INTE shiftRole)
-              const tasksForPerson = visibleTasks.filter((task) => {
-                if (shift.type === "off") return false;
-                if (task.date && task.date !== currentDateStr) return false;
-
-                if (task.shiftRole && task.shiftRole === shift.id) return true;
-                if (task.assigneeId && task.assigneeId === person.id && !task.shiftRole) return true;
-
-                return false;
-              });
-
-              return (
-                <div
-                  key={person.id}
-                  className={`grid border-b border-gray-100 min-h-[140px] hover:bg-gray-50/50 transition-colors relative z-10 ${shift.type === "off" ? "bg-gray-50/50 grayscale opacity-70" : ""
-                    }`}
-                  style={{ gridTemplateColumns }}
-                >
-                  {/* ===== Staff-kolumn (sticky) ===== */}
-                  <div className="sticky left-0 z-20 bg-white p-4 flex items-center gap-3 border-r border-gray-200 shadow-[4px_0_10px_rgba(0,0,0,0.05)]">
-                    <img
-                      src={person.avatar}
-                      className="w-10 h-10 rounded-full bg-gray-200 object-cover border-2 border-white shadow-sm"
-                      alt={person.name}
-                    />
-                    <div className="min-w-0">
-                      <p className="font-bold text-sm text-gray-900 truncate">{person.name}</p>
-                      <p className="text-xs text-gray-500 truncate">{person.role}</p>
-                      <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide truncate">
-                        {shift.label}
-                      </p>
-                      <p className="text-[9px] text-gray-400 font-mono truncate">{shift.time || ""}</p>
-                    </div>
-                  </div>
-
-                  {/* ===== Tidslinje-kolumn (tasks som block) ===== */}
-                  <div
-                    className="relative"
-                    style={{
-                      gridColumn: `2 / span ${totalHours}`,
-                      width: `${timelineWidthPx}px`,
-                      minWidth: `${timelineWidthPx}px`,
-                    }}
-                  >
-                    {tasksForPerson
-                      .filter(isInDayView)
-                      .map((task) => (
-                        <div
-                          key={task.id}
-                          onClick={() => onTaskClick(task)}
-                          className={`
-                            absolute rounded border border-l-[4px] shadow-sm cursor-pointer transition-all bg-white overflow-hidden
-                            hover:shadow-lg hover:z-50 hover:scale-[1.01]
-                            ${task.status === "completed" ? "opacity-80" : ""}
-                          `}
-                          style={getTaskStyle(task)}
-                        >
-                          <div className="p-2">
-                            <div className="text-[10px] font-mono font-bold opacity-70">
-                              {task.timeStart}-{task.timeEnd}
-                            </div>
-                            <div className="text-[11px] font-bold text-gray-900 truncate">{task.title}</div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              );
-            })}
+            {visibleStaff.map((person) => (
+              <StaffRow
+                key={person.id}
+                person={person}
+                currentDate={currentDate}
+                activeLang={activeLang}
+                currentDateStr={currentDateStr}
+                gridTemplateColumns={gridTemplateColumns}
+                totalHours={totalHours}
+                timelineWidthPx={timelineWidthPx}
+                visibleTasks={visibleTasks}
+                isInDayView={isInDayView}
+                getTaskStyle={getTaskStyle}
+                onTaskClick={onTaskClick}
+              />
+            ))}
 
             {/* ===== Ej tilldelade ===== */}
-            <div className="grid min-h-[60px] bg-red-50/30" style={{ gridTemplateColumns }}>
-              <div className="sticky left-0 z-20 bg-red-50/30 p-4 border-r border-gray-200 text-red-500 font-bold text-sm">
-                Ej tilldelade
-              </div>
-
-              <div
-                className="relative"
-                style={{
-                  gridColumn: `2 / span ${totalHours}`,
-                  width: `${timelineWidthPx}px`,
-                  minWidth: `${timelineWidthPx}px`,
-                }}
-              >
-                {visibleTasks
-                  .filter((task) => !task.assigneeId && !task.shiftRole)
-                  .filter(isInDayView)
-                  .map((task) => (
-                    <div
-                      key={task.id}
-                      onClick={() => onTaskClick(task)}
-                      className="absolute p-2 bg-white border border-red-200 text-red-800 rounded text-xs cursor-pointer shadow-sm"
-                      style={getTaskStyle(task)}
-                    >
-                      <div className="font-mono font-bold text-[10px] opacity-70">
-                        {task.timeStart}-{task.timeEnd}
-                      </div>
-                      <div className="font-bold text-[11px] truncate">{task.title}</div>
-                    </div>
-                  ))}
-              </div>
-            </div>
+            <UnassignedRow
+              gridTemplateColumns={gridTemplateColumns}
+              totalHours={totalHours}
+              timelineWidthPx={timelineWidthPx}
+              visibleTasks={visibleTasks}
+              isInDayView={isInDayView}
+              getTaskStyle={getTaskStyle}
+              onTaskClick={onTaskClick}
+            />
           </div>
         </div>
       </div>

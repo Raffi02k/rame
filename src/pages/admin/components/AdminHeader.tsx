@@ -1,4 +1,3 @@
-// src/pages/admin/components/AdminHeader.tsx
 "use client"
 
 import { ChevronLeft, ChevronRight, Calendar, Languages, MapPin, Settings } from "lucide-react"
@@ -36,7 +35,6 @@ export function AdminHeader({
 }: AdminHeaderProps) {
   const isRTL = activeLang === "ar"
 
-  // ✅ Samma week-number-approach (ok för UI)
   const getWeekNumber = (date: Date) => {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
     const dayNum = d.getUTCDay() || 7
@@ -45,7 +43,6 @@ export function AdminHeader({
     return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
   }
 
-  // ✅ Fix: i day-läge använder vi "kortare" format så det inte klipps ("...")
   // Prototypen klarar full text i sin layout, men i din setup blir det lätt för långt.
   const getHeaderDateString = () => {
     if (viewMode === "week") {
