@@ -1,7 +1,13 @@
-import React from 'react';
-import { Task, Person } from '../../../types';
-import { getWeekNumber } from '../../../lib/utils';
-// Note: This is a basic implementation as the full code was not provided.
+import React, { useState } from "react";
+import { Person, Task } from "../../../types";
+
+// Hooks (du har redan dessa)
+import { useWeekDays } from "../schedule/hooks/useWeekDays";
+import { useWeekTranslations } from "../schedule/hooks/useWeekTranslations";
+
+// Components (vi skapar dessa nu)
+import { WeekHeader } from "../schedule/components/WeekHeader";
+import { WeekStaffRow } from "../schedule/components/WeekStaffRow";
 
 interface WeekScheduleProps {
     currentDate: Date;
@@ -12,35 +18,57 @@ interface WeekScheduleProps {
     onDayClick: (date: Date) => void;
 }
 
+type ViewType = "shifts" | "tasks";
+
 export const WeekSchedule: React.FC<WeekScheduleProps> = ({
     currentDate,
-    onDayClick
+    staff,
+    tasks,
+    onTaskClick,
+    activeLang,
+    onDayClick,
 }) => {
-    const weekNum = getWeekNumber(currentDate);
+    // View toggle: visa antingen "pass/shift" eller "tasks"
+    const [viewType, setViewType] = useState<ViewType>("shifts");
+
+    const isRTL = activeLang === "ar";
+
+    // 7 datum (mån–sön)
+    const weekDays = useWeekDays(currentDate);
+
+    // Översatta dag-namn (Mån/Tis…)
+    const { dayNames } = useWeekTranslations(activeLang);
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Vecka {weekNum}</h3>
-            <p className="text-gray-500 mb-4">Veckoöversikt är under utveckling.</p>
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col h-[calc(100vh-220px)]">
+            <div className="overflow-auto flex flex-col h-full bg-gray-50/10">
+                <div className="min-w-[1000px] flex flex-col min-h-full">
+                    <WeekHeader
+                        isRTL={isRTL}
+                        activeLang={activeLang}
+                        staffCount={staff.length}
+                        viewType={viewType}
+                        setViewType={setViewType}
+                        weekDays={weekDays}
+                        dayNames={dayNames}
+                        onDayClick={onDayClick}
+                    />
 
-            <div className="grid grid-cols-7 gap-2">
-                {Array.from({ length: 7 }).map((_, i) => {
-                    const d = new Date(currentDate);
-                    // Adjust to start of week (assuming Monday start for this basic view)
-                    const day = d.getDay() || 7;
-                    d.setDate(d.getDate() - day + 1 + i);
-
-                    return (
-                        <button
-                            key={i}
-                            onClick={() => onDayClick(d)}
-                            className="p-4 border rounded hover:bg-gray-50 flex flex-col items-center"
-                        >
-                            <span className="text-xs font-bold text-gray-400">{d.toLocaleDateString('sv-SE', { weekday: 'short' })}</span>
-                            <span className="font-bold text-gray-800">{d.getDate()}</span>
-                        </button>
-                    )
-                })}
+                    <div className="divide-y divide-gray-100 bg-white">
+                        {staff.map((person) => (
+                            <WeekStaffRow
+                                key={person.id}
+                                person={person}
+                                weekDays={weekDays}
+                                viewType={viewType}
+                                tasks={tasks}
+                                activeLang={activeLang}
+                                isRTL={isRTL}
+                                onTaskClick={onTaskClick}
+                            />
+                        ))}
+                    </div>
+                </div>
             </div>
         </div>
     );
