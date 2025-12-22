@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { STAFF } from '../../lib/demo-data';
 import { cn, getShiftForDate } from '../../lib/utils';
-import { TaskStatus, Task } from '../../lib/types';
+import { TaskStatus, Task } from '../../types';
 import { useTasks } from '../../context/TaskContext';
 import { translateTasks } from '../../lib/translations';
 

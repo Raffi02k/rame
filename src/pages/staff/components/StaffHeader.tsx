@@ -1,5 +1,5 @@
 import React from 'react';
-import { Person } from '../../../lib/types';
+import { Person } from '../../../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface StaffHeaderProps {

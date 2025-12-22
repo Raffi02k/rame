@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { Task, TaskStatus } from '../lib/types';
+import { Task, TaskStatus } from '../types';
 import { TASKS } from '../lib/demo-data';
 
 interface TaskContextType {

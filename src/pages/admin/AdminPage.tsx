@@ -1,14 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Filter, Plus, X, Users } from 'lucide-react';
-// import { Button } from '../../components/Button'; // Assuming Button exists or I should comment it out/replace
-// Helper: I'll try to use a local button or assume it's there. The user didn't give Button code. 
-// I'll check components folder. Step 6 showed components/button.tsx. So '../../components/button' is likely correct (case sensitive?).
-// In Step 6: components/button.tsx.
 import { Button } from '../../components/button';
 import { STAFF, UNITS, USERS } from '../../lib/demo-data';
 import { cn, getCategoryColor } from '../../lib/utils';
 import { getUITranslations, translateTasks, getCategoryLabel as getCatLabel } from '../../lib/translations';
-import { Task, TaskStatus, TaskCategory } from '../../lib/types'; // Corrected path
+import { Task, TaskStatus, TaskCategory } from '../../types'; // Moved types
+import { LanguageCode } from '../../types';
 import { useTasks } from '../../context/TaskContext';
 
 // Sub-components
@@ -17,7 +14,6 @@ import { MissedTaskAlert } from './components/MissedTaskAlert';
 import { DaySchedule } from './components/DaySchedule';
 import { WeekSchedule } from './components/WeekSchedule';
 import { TaskModal } from './modals/TaskModal';
-import { ReportModal } from './modals/ReportModal';
 
 export default function AdminPage() {
   // State
@@ -32,7 +28,7 @@ export default function AdminPage() {
   const { tasks: globalTasks, updateTask: globalUpdateTask, addTask: globalAddTask, deleteTask: globalDeleteTask } = useTasks();
 
   const [currentTask, setCurrentTask] = useState<Partial<Task> | null>(null);
-  const [activeLang, setActiveLang] = useState<import('../../lib/types').LanguageCode>('sv');
+  const [activeLang, setActiveLang] = useState<LanguageCode>('sv');
 
   // Filters
   const [activeFilters, setActiveFilters] = useState<TaskCategory[]>([]);
@@ -288,7 +284,6 @@ export default function AdminPage() {
         onSave={saveTask}
         onDelete={handleDeleteTask}
       />
-      <ReportModal isOpen={isReportModalOpen} onClose={() => setReportModalOpen(false)} />
     </div>
   );
 }

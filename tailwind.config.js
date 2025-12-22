@@ -4,11 +4,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Poppins", "sans-serif"],
+        sans: ["Inter", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
       },
 
       colors: {
-        /* ====== Din design via CSS-variabler ====== */
+        /* ====== Design via CSS-variabler ====== */
         background: "var(--background)",
         foreground: "var(--foreground)",
 
@@ -37,7 +37,7 @@ export default {
         input: "var(--input)",
         ring: "var(--ring)",
 
-        /* ====== Prototypens färger (så klasserna funkar) ====== */
+        /* ====== Färger ====== */
         municipal: {
           50: "#f0f9ff",
           100: "#e0f2fe",
@@ -47,7 +47,6 @@ export default {
           900: "#0c4a6e",
         },
 
-        // "Källstorp" team-färger
         team: {
           red: "#fee2e2",
           redBorder: "#ef4444",
@@ -68,4 +67,4 @@ export default {
     },
   },
   plugins: [],
-}
+};

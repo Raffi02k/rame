@@ -1,5 +1,5 @@
 import React from 'react';
-import { Task, Person } from '../../../lib/types';
+import { Task, Person } from '../../../types';
 import { getWeekNumber } from '../../../lib/utils';
 // Note: This is a basic implementation as the full code was not provided.
 

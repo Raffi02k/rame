@@ -1,5 +1,5 @@
 import React from 'react';
-import { Task } from '../../../lib/types';
+import { Task } from '../../../types';
 import { getCategoryColor } from '../../../lib/utils';
 import { getCategoryLabel } from '../../../lib/translations';
 

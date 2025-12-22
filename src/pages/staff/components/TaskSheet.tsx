@@ -1,5 +1,5 @@
 import React from 'react';
-import { Task } from '../../../lib/types';
+import { Task } from '../../../types';
 import { getCategoryColor } from '../../../lib/utils'; // Keep logic inside component or use helper
 import { X } from 'lucide-react';
 
@@ -46,8 +46,8 @@ export const TaskSheet: React.FC<TaskSheetProps> = ({ task, onClose, onToggleSta
                 <button
                     onClick={() => onToggleStatus(task.id)}
                     className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-transform active:scale-95 ${isCompleted
-                            ? 'bg-gray-100 text-gray-400'
-                            : 'bg-green-600 text-white hover:bg-green-700'
+                        ? 'bg-gray-100 text-gray-400'
+                        : 'bg-green-600 text-white hover:bg-green-700'
                         }`}
                 >
                     {isCompleted ? 'Utförd' : 'Signera / Klar'}
