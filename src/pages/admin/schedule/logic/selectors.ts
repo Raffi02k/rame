@@ -22,8 +22,12 @@ export function isInDayView(task: Task, viewStartHour: number, viewEndHour: numb
 
 // Week selectors 
 /** Week: prefilter tasks by unit only (optional, but recommended) */
-export function getVisableTaskByUnit(tasks: Task[], activeUnitId?: string): Task[] {
+export function getWeekVisibleTasks(tasks: Task[], activeUnitId?: string): Task[] {
     return tasks.filter((task) => !activeUnitId || task.unitId === activeUnitId);
+}
+
+export function isOffForPersonOnDate(personId: string, date: Date, activeLang: string): boolean {
+    return getShiftForDate(personId, date, activeLang).type === "off";
 }
 
 // Week: tasks for ONE person + ONE day
@@ -35,6 +39,9 @@ export function getWeekTasksForPersonAndDay(
     activeLang: string
 ): Task[] {
     const shift = getShiftForDate(person.id, date, activeLang);
+
+    if (shift.type === "off") return [];
+
     return tasks.filter((task) => {
         const matchesDate = !task.date || task.date === dateStr;
         if (!matchesDate) return false;
@@ -45,6 +52,7 @@ export function getWeekTasksForPersonAndDay(
         return matchesShiftRole || matchesAssigneeWhenNoShiftRole;
     });
 }
+
 
 /** Week: tasks for ONE day that are unassigned (optional helper) */
 export function getWeekUnassignedTasksForDay(tasks: Task[], dateStr: string): Task[] {
