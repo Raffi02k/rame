@@ -1,4 +1,5 @@
 
+
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Sun, Moon, Sunrise, Coffee } from 'lucide-react';
@@ -38,6 +39,13 @@ export function getWeekNumber(d: Date): number {
   return weekNo;
 }
 
+export function toLocalYMD(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 interface ShiftInfo {
   id: ShiftRole;
   type: 'day' | 'eve' | 'night' | 'off';
@@ -53,7 +61,7 @@ interface ShiftInfo {
 export function getShiftForDate(personId: string, date: Date, lang: string = 'sv'): ShiftInfo {
   const person = STAFF.find(s => s.id === personId);
   const unitId = person?.unitId || 'u1';
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = toLocalYMD(date);
 
   // 1. Get all staff for this unit and sort them to have a stable order
   const unitStaff = STAFF.filter(s => s.unitId === unitId).sort((a, b) => a.id.localeCompare(b.id));

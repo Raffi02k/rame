@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Person, Task } from "../../../../types";
-import { toLocalYMD } from "../logic/date";
+import { toLocalYMD } from "../../../../lib/utils";
 import { getWeekTasksForPersonAndDay, isOffForPersonOnDate } from "../logic/selectors";
 import { useTasks } from "../../../../context/TaskContext";
 

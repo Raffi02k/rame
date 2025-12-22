@@ -5,7 +5,7 @@ import { getCategoryLabel } from '../../../lib/translations';
 
 interface TimelineViewProps {
     tasks: Task[];
-    showVikarieMode: boolean; // Maybe show extra details?
+    showVikarieMode: boolean;
     activeLang: string;
     onTaskClick: (task: Task) => void;
 }

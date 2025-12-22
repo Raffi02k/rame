@@ -5,11 +5,10 @@ import { ScheduleHeader } from "../schedule/components/ScheduleHeader";
 import { ScheduleGridBackground } from "../schedule/components/ScheduleGridBackground";
 import { StaffRow } from "../schedule/components/StaffRow";
 import { UnassignedRow } from "../schedule/components/UnassignedRow";
-
-import { toLocalYMD } from "../schedule/logic/date";
 import { buildDayScheduleLayout } from "../schedule/logic/layout";
 import { getVisibleStaff, getVisibleTasks, isInDayView as isInDayViewFn } from "../schedule/logic/selectors";
 import { getTaskStyle as getTaskStyleFn } from "../schedule/logic/taskPositioning";
+import { toLocalYMD } from "../../../lib/utils";
 
 interface DayScheduleProps {
   currentDate: Date;
