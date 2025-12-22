@@ -6,7 +6,7 @@ import { X } from 'lucide-react';
 interface TaskSheetProps {
     task: Task | null;
     onClose: () => void;
-    onToggleStatus: (id: string) => void;
+    onToggleStatus: (id: string, dateKey?: string) => void;
     showVikarieMode: boolean;
 }
 
@@ -44,7 +44,7 @@ export const TaskSheet: React.FC<TaskSheetProps> = ({ task, onClose, onToggleSta
                 </div>
 
                 <button
-                    onClick={() => onToggleStatus(task.id)}
+                    onClick={() => onToggleStatus(task.id, task.date)}
                     className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-transform active:scale-95 ${isCompleted
                         ? 'bg-gray-100 text-gray-400'
                         : 'bg-green-600 text-white hover:bg-green-700'
