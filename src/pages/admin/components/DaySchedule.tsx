@@ -1,5 +1,5 @@
 import React from "react";
-import { Task, Person } from "../../../lib/types";
+import { Task, Person } from "../../../types";
 import { getShiftForDate } from "../../../lib/utils";
 
 interface DayScheduleProps {
@@ -129,7 +129,6 @@ export const DaySchedule: React.FC<DayScheduleProps> = ({
             {visibleStaff.map((person) => {
               const shift = getShiftForDate(person.id, currentDate, activeLang);
 
-              // Koppling (som prototypen):
               // 1) shiftRole matchar dagens shift
               // 2) assigneeId matchar personen (och tasken har INTE shiftRole)
               const tasksForPerson = visibleTasks.filter((task) => {

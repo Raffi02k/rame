@@ -1,5 +1,5 @@
 import React from 'react';
-import { Task, Person } from '../../../lib/types';
+import { Task, Person } from '../../../types';
 
 interface TaskModalProps {
     isOpen: boolean;

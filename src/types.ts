@@ -8,11 +8,11 @@ export enum Role {
 }
 
 export enum TaskCategory {
-  HSL = 'hsl', // Health/Medical (Red usually)
-  CARE = 'care', // Omsorg/Hygiene
-  SERVICE = 'service', // Food, Cleaning
-  SOCIAL = 'social', // Activity
-  ADMIN = 'admin', // Documentation
+  HSL = 'hsl',
+  CARE = 'care',
+  SERVICE = 'service',
+  SOCIAL = 'social',
+  ADMIN = 'admin',
 }
 
 export enum TaskStatus {
@@ -22,7 +22,6 @@ export enum TaskStatus {
   SIGNED = 'signed',
 }
 
-// Nya specifika pass-roller inkl Natt Röd/Blå
 export type ShiftRole = 'morning_red' | 'morning_blue' | 'evening_red' | 'evening_blue' | 'night_red' | 'night_blue' | 'admin_day' | 'off';
 
 export interface Person {
@@ -30,26 +29,40 @@ export interface Person {
   name: string;
   role: string;
   avatar: string;
-  teamColor?: 'red' | 'blue' | 'purple' | 'white'; // Visual team indicator
-  unitId?: string; // Belongs to specific unit
+  teamColor?: 'red' | 'blue' | 'purple' | 'white';
+  unitId?: string;
+}
+
+export interface Report {
+  id: string;
+  date: string; // YYYY-MM-DD
+  unitId: string;
+  type: 'night_to_day' | 'day_to_evening';
+  authorName: string;
+  toName: string;
+  content: string;
+  timestamp: string;
 }
 
 export interface Task {
   id: string;
   title: string;
   description?: string;
-  timeStart: string; // HH:mm
-  timeEnd: string; // HH:mm
+  substituteInstructions?: string;
+  timeStart: string;
+  timeEnd: string;
   category: TaskCategory;
   status: TaskStatus;
   assigneeId?: string;
-  recipientId?: string; // Who receives the care
+  recipientId?: string;
   requiresSign?: boolean;
   notes?: string;
-  isTeamTask?: boolean; // Requires 2 people
+  isTeamTask?: boolean;
   unitId?: string;
-  date?: string; // YYYY-MM-DD for week view logic (simulated)
-  shiftRole?: ShiftRole; // Kopplar uppgiften till ett specifikt pass (t.ex. Dag Röd)
+  date?: string;
+  shiftRole?: ShiftRole;
+  isReportTask?: boolean; // Flaggar om detta är en rapportuppgift
+  reportType?: 'night_to_day' | 'day_to_evening';
 }
 
 export interface Unit {
