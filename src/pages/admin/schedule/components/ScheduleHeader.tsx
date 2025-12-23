@@ -1,33 +1,108 @@
 import React from "react";
-
+import { Sun, Moon } from "lucide-react";
+import { cn } from "../../../../lib/utils";
+/**
+ * - dag/natt toggle
+ * - RTL (sticky left/right)
+ */
 interface ScheduleHeaderProps {
     gridTemplateColumns: string;
     hourHeaders: number[];
     staffCount: number;
+
+    //(för dag/natt toggle + "just nu")
+    isRTL: boolean;
+    activeLang: string;
+    viewPeriod: "day" | "night";
+    setViewPeriod: (p: "day" | "night") => void;
+    isToday: boolean;
+    nowHour: number;
+    justNuLabel: string;
 }
 
 export function ScheduleHeader({
     gridTemplateColumns,
     hourHeaders,
     staffCount,
+
+    isRTL,
+    activeLang,
+    viewPeriod,
+    setViewPeriod,
+    isToday,
+    nowHour,
+    justNuLabel,
 }: ScheduleHeaderProps) {
     return (
         <div
-            className="sticky top-0 z-30 bg-gray-50 border-b border-gray-200 h-12 grid"
+            className="sticky top-0 z-[115] bg-gray-100 border-b border-gray-300 h-12 grid"
             style={{ gridTemplateColumns }}
         >
-            <div className="sticky left-0 z-40 bg-gray-50 px-3 flex items-center text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-200 shadow-[4px_0_10px_rgba(0,0,0,0.05)]">
-                Personal ({staffCount})
+            <div
+                className={cn(
+                    "sticky z-[120] bg-gray-100 px-3 flex items-center justify-between text-xs font-bold text-gray-500 uppercase tracking-wider shadow-[4px_0_10px_rgba(0,0,0,0.05)]",
+                    isRTL ? "right-0 border-l border-l-gray-300" : "left-0 border-r border-r-gray-300"
+                )}
+            >
+                <span className="truncate">
+                    {activeLang === "sv" ? `Personal (${staffCount})` : `Staff (${staffCount})`}
+                </span>
+
+                {/* Dag/Natt toggle */}
+                <div className="flex bg-gray-200 rounded p-0.5 ml-2">
+                    <button
+                        type="button"
+                        onClick={() => setViewPeriod("day")}
+                        className={cn(
+                            "p-1 rounded w-7 h-7 flex items-center justify-center transition-all",
+                            viewPeriod === "day"
+                                ? "bg-white text-orange-500 shadow-sm"
+                                : "text-gray-400 hover:text-gray-600"
+                        )}
+                        title={activeLang === "sv" ? "Dag" : "Day"}
+                    >
+                        <Sun size={14} />
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setViewPeriod("night")}
+                        className={cn(
+                            "p-1 rounded w-7 h-7 flex items-center justify-center transition-all",
+                            viewPeriod === "night"
+                                ? "bg-municipal-900 text-white shadow-sm"
+                                : "text-gray-400 hover:text-gray-600"
+                        )}
+                        title={activeLang === "sv" ? "Natt" : "Night"}
+                    >
+                        <Moon size={14} />
+                    </button>
+                </div>
             </div>
 
-            {hourHeaders.map((hour) => (
-                <div
-                    key={hour}
-                    className="flex items-center justify-center text-[11px] font-bold text-gray-400 border-l border-gray-200 bg-gray-50"
-                >
-                    {String(hour).padStart(2, "0")}:00
-                </div>
-            ))}
+            {/* HourHeaders renderas men med "Just nu" highlight*/}
+            {hourHeaders.map((hour, idx) => {
+                const isCurrentHour = isToday && hour === nowHour;
+
+                return (
+                    <div
+                        key={`${hour}-${idx}`}
+                        className={cn(
+                            "flex flex-col items-center justify-center text-[11px] font-bold border-l border-gray-200 relative",
+                            isCurrentHour
+                                ? "bg-blue-50 border-t-4 border-t-municipal-600 text-municipal-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
+                                : "bg-gray-100 text-gray-400 border-t-4 border-t-transparent"
+                        )}
+                    >
+                        {isCurrentHour && (
+                            <span className="text-[8px] font-black text-municipal-600 uppercase tracking-tighter leading-none mb-0.5 animate-pulse">
+                                {justNuLabel}
+                            </span>
+                        )}
+                        {String(hour).padStart(2, "0")}:00
+                    </div>
+                );
+            })}
         </div>
     );
 }
