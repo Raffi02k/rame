@@ -1,22 +1,71 @@
 import React from "react";
-import { getShiftForDate } from "../../../../lib/utils";
+import { Sun, Moon, Sunrise, Coffee } from "lucide-react";
+import { cn, getShiftForDate } from "../../../../lib/utils";
 
 interface WeekShiftCellProps {
     personId: string;
     date: Date;
     activeLang: string;
+    isRTL: boolean;
+    isWeekend: boolean;
+    isToday: boolean;
 }
 
-export const WeekShiftCell: React.FC<WeekShiftCellProps> = ({ personId, date, activeLang }) => {
-    // Shift-info kommer från demo-logic (samma som day view använder)
+export const WeekShiftCell: React.FC<WeekShiftCellProps> = ({
+    personId,
+    date,
+    activeLang,
+    isRTL,
+    isWeekend,
+    isToday,
+}) => {
     const shift = getShiftForDate(personId, date, activeLang);
 
-    const isOff = shift.type === "off";
+    const getShiftIcon = (type: string) => {
+        switch (type) {
+            case "day":
+                return Sun;
+            case "eve":
+                return Sunrise;
+            case "night":
+                return Moon;
+            default:
+                return Coffee;
+        }
+    };
+
+    const Icon = getShiftIcon(shift.type);
 
     return (
-        <div className={"h-full p-3 " + (isOff ? "bg-gray-50/60 opacity-70 grayscale" : "")}>
-            <div className="text-xs font-bold text-gray-800 truncate">{shift.label}</div>
-            <div className="text-[10px] text-gray-500 font-mono truncate">{shift.time || ""}</div>
+        <div
+            className={cn(
+                "p-2 flex flex-col justify-center",
+                isRTL
+                    ? "border-l border-l-gray-100 last:border-l-0"
+                    : "border-r border-r-gray-100 last:border-r-0",
+                isWeekend && "bg-gray-50/40",
+                isToday && "bg-blue-50/30"
+            )}
+        >
+            {shift.type !== "off" ? (
+                <div
+                    className={cn(
+                        "w-full h-full rounded-lg border p-2 flex flex-col items-center justify-center gap-1 text-center",
+                        "transition-all hover:scale-[1.02] hover:shadow-md cursor-pointer",
+                        shift.color
+                    )}
+                >
+                    <div className="flex items-center gap-1.5 font-bold text-[11px] leading-tight">
+                        {Icon && <Icon size={12} />}
+                        <span>{shift.label}</span>
+                    </div>
+                    <div className="text-[9px] font-mono opacity-80">{shift.time}</div>
+                </div>
+            ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-300 text-[10px] font-bold italic tracking-tight uppercase">
+                    {shift.label}
+                </div>
+            )}
         </div>
     );
 };
