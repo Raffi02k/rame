@@ -1,14 +1,17 @@
 import React, { useMemo } from "react";
-import { Person, Task } from "../../../../types";
-import { toLocalYMD } from "../../../../lib/utils";
-import { getWeekTasksForPersonAndDay, isOffForPersonOnDate } from "../logic/selectors";
+import { cn, getCategoryColor, getShiftForDate, toLocalYMD } from "../../../../lib/utils";
+import { Person, Task, TaskStatus } from "../../../../types";
 import { useTasks } from "../../../../context/TaskContext";
+import { getWeekTasksForPersonAndDay } from "../logic/selectors";
 
 interface WeekTasksCellProps {
     person: Person;
     date: Date;
     tasks: Task[];
     activeLang: string;
+    isRTL: boolean;
+    isWeekend: boolean;
+    isToday: boolean;
     onTaskClick: (task: Task) => void;
 }
 
@@ -17,62 +20,89 @@ export const WeekTasksCell: React.FC<WeekTasksCellProps> = ({
     date,
     tasks,
     activeLang,
+    isRTL,
+    isWeekend,
+    isToday,
     onTaskClick,
 }) => {
-    const dateKey = toLocalYMD(date);
     const { getTaskStatus } = useTasks();
+    const shift = getShiftForDate(person.id, date, activeLang);
 
-    // Off ska avgöras av shift, inte av "0 tasks"
-    const isOff = useMemo(
-        () => isOffForPersonOnDate(person.id, date, activeLang),
-        [person.id, date, activeLang]
-    );
+    const dateKey = toLocalYMD(date);
 
-    const { visible, hiddenCount } = useMemo(() => {
-        if (isOff) return { visible: [] as Task[], hiddenCount: 0 };
+    const dailyTasks = useMemo(() => {
+        if (shift.type === "off") return [];
 
-        const toMinutes = (hhmm: string) => {
-            const [h, m] = hhmm.split(":").map(Number);
-            return h * 60 + m;
-        };
+        // Använd din befintliga selector (bättre än att duplicera filter)
+        const base = getWeekTasksForPersonAndDay(tasks, person, date, dateKey, activeLang);
 
-        const all = getWeekTasksForPersonAndDay(tasks, person, date, dateKey, activeLang)
-            .map((t) => ({
-                ...t,
-                status: getTaskStatus(t.id, dateKey),
-                date: dateKey,
-            }))
-            .sort((a, b) => toMinutes(a.timeStart) - toMinutes(b.timeStart));
-
-        const MAX = 3;
-        const visible = all.slice(0, MAX);
-        const hiddenCount = Math.max(all.length - MAX, 0);
-
-        return { visible, hiddenCount };
-    }, [isOff, tasks, person, date, dateKey, activeLang, getTaskStatus]);
-
-    if (isOff) {
-        return <div className="h-full p-3 bg-gray-50/60 opacity-70 grayscale" />;
-    }
+        return base.map((t) => ({
+            ...t,
+            status: getTaskStatus(t.id, dateKey),
+            date: dateKey, // viktigt för modalen
+        }));
+    }, [shift.type, tasks, person, date, dateKey, activeLang, getTaskStatus]);
 
     return (
-        <div className="h-full p-2 flex flex-col gap-2">
-            {visible.map((task) => (
-                <button
-                    key={task.id}
-                    onClick={() => onTaskClick(task)}
-                    className="text-left bg-white border border-gray-200 rounded-md p-2 shadow-sm hover:shadow transition"
-                >
-                    <div className="text-[11px] font-mono font-bold text-gray-500">
-                        {task.timeStart}–{task.timeEnd}
-                    </div>
-                    <div className="text-xs font-bold text-gray-900 truncate">{task.title}</div>
-                </button>
-            ))}
+        <div
+            className={cn(
+                "p-2 relative flex flex-col gap-1.5",
+                isRTL
+                    ? "border-l border-l-gray-100 last:border-l-0"
+                    : "border-r border-r-gray-100 last:border-r-0",
+                isWeekend && "bg-gray-50/40",
+                isToday && "bg-blue-50/30"
+            )}
+        >
+            {dailyTasks.length > 0 ? (
+                dailyTasks.slice(0, 4).map((task) => {
+                    const isDone =
+                        task.status === TaskStatus.COMPLETED || task.status === TaskStatus.SIGNED;
+                    const isMissed = task.status === TaskStatus.MISSED;
 
-            {hiddenCount > 0 && (
-                <div className="text-[11px] font-bold text-gray-500 px-2">
-                    +{hiddenCount} till
+                    const dotClass =
+                        isDone
+                            ? "bg-green-500"
+                            : isMissed
+                                ? "bg-red-500"
+                                : task.category === "hsl"
+                                    ? "bg-red-500"
+                                    : task.category === "care"
+                                        ? "bg-blue-500"
+                                        : task.category === "service"
+                                            ? "bg-orange-500"
+                                            : task.category === "social"
+                                                ? "bg-green-500"
+                                                : "bg-gray-500";
+
+                    return (
+                        <div
+                            key={task.id}
+                            onClick={() => onTaskClick(task)}
+                            className={cn(
+                                "rounded px-2 py-1 text-[10px] border cursor-pointer",
+                                "hover:shadow-sm hover:scale-[1.01] transition-all truncate font-bold flex items-center gap-2",
+                                !isDone && !isMissed && getCategoryColor(task.category),
+                                isDone && "bg-green-50 border-green-200 text-green-700 opacity-70 grayscale-[0.2]",
+                                isMissed && "bg-red-50 border-red-300 text-red-700 ring-1 ring-red-200"
+                            )}
+                        >
+                            <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", dotClass)} />
+                            <span className={cn("truncate tracking-tight", isDone && "line-through")}>
+                                {task.title}
+                            </span>
+                        </div>
+                    );
+                })
+            ) : (
+                <div className="flex-1 flex items-center justify-center text-[10px] text-gray-200 font-bold tracking-widest">
+                    -
+                </div>
+            )}
+
+            {dailyTasks.length > 4 && (
+                <div className="text-center text-[9px] text-municipal-600 font-black uppercase tracking-tighter cursor-pointer hover:underline">
+                    + {dailyTasks.length - 4} till
                 </div>
             )}
         </div>

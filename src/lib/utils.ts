@@ -1,5 +1,3 @@
-
-
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Sun, Moon, Sunrise, Coffee } from 'lucide-react';
@@ -12,14 +10,21 @@ export function cn(...inputs: ClassValue[]) {
 
 export function getCategoryColor(category: string): string {
   switch (category) {
-    case 'hsl': return 'bg-red-100 text-red-800 border-red-200';
-    case 'care': return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'service': return 'bg-orange-100 text-orange-800 border-orange-200';
-    case 'social': return 'bg-green-100 text-green-800 border-green-200';
-    case 'admin': return 'bg-gray-100 text-gray-800 border-gray-200';
-    default: return 'bg-gray-100 text-gray-800';
+    case "hsl":
+      return "bg-red-100 text-red-800 border-red-200 border-l-red-500";
+    case "care":
+      return "bg-blue-100 text-blue-800 border-blue-200 border-l-blue-500";
+    case "service":
+      return "bg-orange-100 text-orange-800 border-orange-200 border-l-orange-500";
+    case "social":
+      return "bg-green-100 text-green-800 border-green-200 border-l-green-500";
+    case "admin":
+      return "bg-gray-100 text-gray-800 border-gray-200 border-l-gray-500";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200 border-l-gray-400";
   }
 }
+
 
 export function getTeamColorClasses(color?: string) {
   switch (color) {

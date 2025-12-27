@@ -1,4 +1,5 @@
 import React from "react";
+import { TaskCard } from "./TaskCard";
 import { Person, Task } from "../../../../types";
 import { getShiftForDate } from "../../../../lib/utils";
 
@@ -80,24 +81,15 @@ export function StaffRow({
                 {tasksForPerson
                     .filter(isInDayView)
                     .map((task) => (
-                        <div
+                        <TaskCard
                             key={task.id}
-                            onClick={() => onTaskClick(task)}
-                            className={`
-                            absolute rounded border border-l-[4px] shadow-sm cursor-pointer transition-all bg-white overflow-hidden
-                            hover:shadow-lg hover:z-50 hover:scale-[1.01]
-                            ${task.status === "completed" ? "opacity-80" : ""}
-                          `}
-                            style={getTaskStyle(task)}
-                        >
-                            <div className="p-2">
-                                <div className="text-[10px] font-mono font-bold opacity-70">
-                                    {task.timeStart}-{task.timeEnd}
-                                </div>
-                                <div className="text-[11px] font-bold text-gray-900 truncate">{task.title}</div>
-                            </div>
-                        </div>
+                            task={task}
+                            getTaskStyle={getTaskStyle}
+                            onTaskClick={onTaskClick}
+                            timelineWidthPx={timelineWidthPx}
+                        />
                     ))}
+
             </div>
         </div>
     );

@@ -15,6 +15,7 @@ interface WeekStaffRowProps {
     onTaskClick: (task: Task) => void;
 }
 
+
 export const WeekStaffRow: React.FC<WeekStaffRowProps> = ({
     person,
     weekDays,
@@ -32,7 +33,7 @@ export const WeekStaffRow: React.FC<WeekStaffRowProps> = ({
                 direction: isRTL ? "rtl" : "ltr",
             }}
         >
-            {/* Personal sticky-kolumn */}
+            {/* Sticky personal-kolumn: lämna som du har */}
             <div
                 className={cn(
                     "p-4 bg-white group-hover:bg-gray-50/30 transition-colors sticky z-10 flex flex-col justify-center",
@@ -56,36 +57,33 @@ export const WeekStaffRow: React.FC<WeekStaffRowProps> = ({
                 </div>
             </div>
 
-            {/* Dag-celler */}
+            {/* Dag-celler (direkt som prototypen) */}
             {weekDays.map((date, dayIndex) => {
                 const isWeekend = dayIndex === 5 || dayIndex === 6;
                 const isToday = date.toDateString() === new Date().toDateString();
 
-                return (
-                    <div
+                return viewType === "shifts" ? (
+                    <WeekShiftCell
                         key={date.toISOString()}
-                        className={cn(
-                            "bg-white",
-                            // ✅ samma sida som headern: LTR -> border-r, RTL -> border-l
-                            isRTL
-                                ? "border-l border-l-gray-100 last:border-l-0"
-                                : "border-r border-r-gray-100 last:border-r-0",
-                            isWeekend && "bg-gray-50/30",
-                            isToday && "ring-1 ring-municipal-200"
-                        )}
-                    >
-                        {viewType === "shifts" ? (
-                            <WeekShiftCell personId={person.id} date={date} activeLang={activeLang} />
-                        ) : (
-                            <WeekTasksCell
-                                person={person}
-                                date={date}
-                                tasks={tasks}
-                                activeLang={activeLang}
-                                onTaskClick={onTaskClick}
-                            />
-                        )}
-                    </div>
+                        personId={person.id}
+                        date={date}
+                        activeLang={activeLang}
+                        isRTL={isRTL}
+                        isWeekend={isWeekend}
+                        isToday={isToday}
+                    />
+                ) : (
+                    <WeekTasksCell
+                        key={date.toISOString()}
+                        person={person}
+                        date={date}
+                        tasks={tasks}
+                        activeLang={activeLang}
+                        isRTL={isRTL}
+                        isWeekend={isWeekend}
+                        isToday={isToday}
+                        onTaskClick={onTaskClick}
+                    />
                 );
             })}
         </div>
