@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Filter, Plus, X, Users } from 'lucide-react';
-import { Button } from '../../components/button';
+import { Button } from '../../components/Button';
 import { STAFF, UNITS, USERS } from '../../lib/demo-data';
 import { cn, getCategoryColor } from '../../lib/utils';
 import { getUITranslations, translateTasks, getCategoryLabel as getCatLabel } from '../../lib/translations';
