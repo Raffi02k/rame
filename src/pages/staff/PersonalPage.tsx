@@ -196,7 +196,7 @@ export default function PersonalPage() {
         </button>
       </div>
 
-      <main className="px-4 py-6 space-y-4 flex-1 bg-[#f8fafc]">
+      <main className="px-4 py-4 space-y-4 flex-1 bg-[#f8fafc] overflow-y-auto">
         {activeTab === "today" ? (
           <TimelineView tasks={dailyTasks} showVikarieMode={showVikarieMode} activeLang={activeLang} onTaskClick={setSelectedTask} />
         ) : (
@@ -215,7 +215,14 @@ export default function PersonalPage() {
         )}
       </main>
 
-      <TaskSheet task={selectedTask} onClose={() => setSelectedTask(null)} onToggleStatus={toggleTaskStatus} showVikarieMode={showVikarieMode} />
+      <TaskSheet
+        task={selectedTask}
+        onClose={() => setSelectedTask(null)}
+        onToggleStatus={toggleTaskStatus}
+        showVikarieMode={showVikarieMode}
+        activeLang={activeLang}
+      />
+
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-2 flex justify-around max-w-md mx-auto z-50">
         <Link to="/" className="p-2 text-gray-400 hover:text-municipal-600 flex flex-col items-center">

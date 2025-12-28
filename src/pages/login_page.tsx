@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"
 import { useState } from "react"
 import { Card, CardContent } from "../components/card"
-import { Button } from "../components/button"
+import { Button } from "../components/Button"
 import { UserCircle, Users, Heart } from "lucide-react"
 
 export default function LoginPage() {

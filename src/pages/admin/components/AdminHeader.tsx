@@ -1,5 +1,3 @@
-"use client"
-
 import { ChevronLeft, ChevronRight, Calendar, Languages, MapPin, Settings } from "lucide-react"
 import { LanguageCode, Unit, ViewMode } from "../../../types"
 import { cn } from "../../../lib/utils"

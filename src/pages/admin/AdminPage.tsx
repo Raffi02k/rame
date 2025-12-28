@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Filter, Plus, X, Users } from 'lucide-react';
-import { Button } from '../../components/button';
+import { Button } from '../../components/Button';
 import { STAFF, UNITS, USERS } from '../../lib/demo-data';
 import { cn, getCategoryColor } from '../../lib/utils';
 import { getUITranslations, translateTasks, getCategoryLabel as getCatLabel } from '../../lib/translations';
@@ -172,9 +172,9 @@ export default function AdminPage() {
             </h1>
             {viewMode === 'day' && (
               <div className="text-gray-500 text-sm flex gap-4 mt-1">
-                <span>{activeLang === 'ar' ? 'الليل' : 'Natt'} 23:00 - 05:59</span>
+                <span>{activeLang === 'ar' ? 'الصباح' : 'Morgon'} 07:00 - 22:00</span>
                 <span className="w-px h-4 bg-gray-300"></span>
-                <span>{activeLang === 'ar' ? 'الصباح' : 'Morgon'} 06:00 - 11:59</span>
+                <span>{activeLang === 'ar' ? 'الليل' : 'Natt'} 22:00 - 07:00</span>
               </div>
             )}
           </div>
