@@ -1,13 +1,5 @@
 import React from "react";
-import {
-    CheckCircle2,
-    AlertTriangle,
-    Info,
-    ShieldCheck,
-    Key,
-    Clock,
-    FileText,
-} from "lucide-react";
+import { CheckCircle2, AlertTriangle, Info, ShieldCheck, Key, Clock, FileText } from "lucide-react";
 import { cn, getCategoryColor } from "../../../lib/utils";
 import { Task, TaskStatus } from "../../../types";
 import { Badge } from "../../../components/Badge";
